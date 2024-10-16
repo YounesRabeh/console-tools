@@ -7,6 +7,7 @@ import java.util.Set;
 
 /**
  * A class to create and print tables in the console
+ * @author Younes Rabeh
  */
 public class Table {
     /** The rows of the table */

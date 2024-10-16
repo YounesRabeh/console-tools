@@ -1,5 +1,10 @@
 package it.unicam.cs.tables;
 
+/**
+ * The regions of a table
+ * @see Table
+ * @author Younes Rabeh
+ */
 public enum TableRegion {
     LINE,
     WALL,
