@@ -1,4 +1,4 @@
-package it.unicam.cs.tables;
+package it.unicam.cs.table;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -11,11 +11,11 @@ import java.util.Set;
  */
 public class Table {
     /** The rows of the table */
-    private List<String[]> rows = new ArrayList<>();
+    private List<List<String>> rows = new ArrayList<>();
     /** The headers of the table */
-    private String[] headers;
+    private List<String> headers;
     /** The widths of the columns */
-    private int[] columnWidths;
+    private List<Integer> columnWidths;
     /** The borders of the table */
     private String[] borders;
 
@@ -40,26 +40,41 @@ public class Table {
      * @param headers the headers of the table
      * @throws IllegalArgumentException if headers are empty, null, or contain duplicates
      */
-    public void setHeaders(String... headers) {
+    public void setHeaders(List<String> headers) {
         validateHeaders(headers); // Validate headers
         this.headers = trimHeaders(headers); // Trim whitespace
-        columnWidths = new int[this.headers.length];
+        columnWidths = new ArrayList<>();
 
         // Set column widths based on header lengths initially
-        for (int i = 0; i < this.headers.length; i++) {
-            columnWidths[i] = this.headers[i].length();
+        for (String header : this.headers) {
+            columnWidths.add(header.length());
         }
     }
 
     /**
+     * Set the headers of the table
+     * @param headers the headers of the table
+     * @throws IllegalArgumentException if headers are empty, null, or contain duplicates
+     */
+    public void setHeaders(String... headers) {
+        setHeaders(List.of(headers));
+    }
+
+
+
+    /**
      * Trim leading and trailing whitespace from each header.
      * @param headers the headers to trim
-     * @return an array of trimmed headers
+     * @return a list of trimmed headers
      */
-    private String[] trimHeaders(String... headers) {
-        String[] trimmedHeaders = new String[headers.length];
-        for (int i = 0; i < headers.length; i++) {
-            trimmedHeaders[i] = headers[i].trim(); // Trim each header
+    private List<String> trimHeaders(List<String> headers) {
+        List<String> trimmedHeaders = new ArrayList<>();
+        for (String header : headers) {
+            String trimmedHeader = header.toUpperCase().trim();
+            if (trimmedHeaders.contains(trimmedHeader)) {
+                throw new IllegalArgumentException("Duplicate header found: " + trimmedHeader);
+            }
+            trimmedHeaders.add(trimmedHeader);
         }
         return trimmedHeaders;
     }
@@ -68,31 +83,40 @@ public class Table {
      * Add a row to the table
      * @param row the row to add
      */
-    public void addRow(String... row) {
-        String[] adjustedRow = new String[headers.length];
-        for (int i = 0; i < headers.length; i++) {
-            if (i < row.length && row[i] != null && !row[i].isEmpty()) {
-                adjustedRow[i] = row[i];
+    public void addRow(List<String> row) {
+        List<String> adjustedRow = new ArrayList<>();
+
+        for (int i = 0; i < headers.size(); i++) {
+            if (i < row.size() && row.get(i) != null && !row.get(i).isEmpty()) {
+                adjustedRow.add(row.get(i).trim());
             } else {
-                adjustedRow[i] = "_null_";  // Simulate italic null
+                adjustedRow.add("_null_");  // Simulate italic null
             }
         }
 
         rows.add(adjustedRow);
 
         // Adjust column widths based on row contents
-        for (int i = 0; i < adjustedRow.length; i++) {
-            columnWidths[i] = Math.max(columnWidths[i], adjustedRow[i].length());
+        for (int i = 0; i < adjustedRow.size(); i++) {
+            columnWidths.set(i, Math.max(columnWidths.get(i), adjustedRow.get(i).length()));
         }
     }
 
     /**
-     * Check for duplicates in the headers array.
+     * Add a row to the table
+     * @param row the row to add
+     */
+    public void addRow(String... row) {
+        addRow(List.of(row));
+    }
+
+    /**
+     * Check for duplicates in the headers list.
      * @param headers the headers to check
      * @throws IllegalArgumentException if duplicates are found
      */
-    private void validateHeaders(String... headers) {
-        if (headers == null || headers.length == 0) {
+    private void validateHeaders(List<String> headers) {
+        if (headers == null || headers.isEmpty()) {
             throw new IllegalArgumentException("Headers cannot be null or empty.");
         }
         Set<String> headerSet = new HashSet<>();
@@ -112,7 +136,7 @@ public class Table {
         append(sb, generateTopBorder());
         append(sb, generateRow(headers));
         append(sb, generateMiddleBorder());
-        for (String[] row : rows) {
+        for (List<String> row : rows) {
             append(sb, generateRow(row));
         }
         append(sb, generateBottomBorder());
@@ -135,9 +159,9 @@ public class Table {
     private StringBuilder generateTopBorder() {
         StringBuilder sb = new StringBuilder();
         sb.append(borders[TableRegion.UPPER_LEFT_INTERSECTION.ordinal()]);  // ┌ or equivalent
-        for (int i = 0; i < columnWidths.length; i++) {
-            sb.append(borders[TableRegion.LINE.ordinal()].repeat(columnWidths[i] + 2));  // ─ or equivalent
-            if (i < columnWidths.length - 1) {
+        for (int i = 0; i < columnWidths.size(); i++) {
+            sb.append(borders[TableRegion.LINE.ordinal()].repeat(columnWidths.get(i) + 2));  // ─ or equivalent
+            if (i < columnWidths.size() - 1) {
                 sb.append(borders[TableRegion.UPPER_CENTER_INTERSECTION.ordinal()]);  // ┬ or equivalent
             }
         }
@@ -153,14 +177,14 @@ public class Table {
     private StringBuilder generateMiddleBorder() {
         StringBuilder sb = new StringBuilder();
         sb.append(borders[TableRegion.MIDDLE_LEFT_INTERSECTION.ordinal()]);  // ├ or equivalent
-        for (int i = 0; i < columnWidths.length; i++) {
-            sb.append(borders[TableRegion.LINE.ordinal()].repeat(columnWidths[i] + 2));  // ─ or equivalent
-            if (i < columnWidths.length - 1) {
+        for (int i = 0; i < columnWidths.size(); i++) {
+            sb.append(borders[TableRegion.LINE.ordinal()].repeat(columnWidths.get(i) + 2));  // ─ or equivalent
+            if (i < columnWidths.size() - 1) {
                 sb.append(borders[TableRegion.MIDDLE_CENTER_INTERSECTION.ordinal()]);  // ┼ or equivalent
             }
         }
         sb.append(borders[TableRegion.MIDDLE_RIGHT_INTERSECTION.ordinal()]);  // ┤ or equivalent
-       return sb;
+        return sb;
     }
 
 
@@ -171,9 +195,9 @@ public class Table {
     private StringBuilder generateBottomBorder() {
         StringBuilder sb = new StringBuilder();
         sb.append(borders[TableRegion.LOWER_LEFT_INTERSECTION.ordinal()]);  // └ or equivalent
-        for (int i = 0; i < columnWidths.length; i++) {
-            sb.append(borders[TableRegion.LINE.ordinal()].repeat(columnWidths[i] + 2));  // ─ or equivalent
-            if (i < columnWidths.length - 1) {
+        for (int i = 0; i < columnWidths.size(); i++) {
+            sb.append(borders[TableRegion.LINE.ordinal()].repeat(columnWidths.get(i) + 2));  // ─ or equivalent
+            if (i < columnWidths.size() - 1) {
                 sb.append(borders[TableRegion.LOWER_CENTER_INTERSECTION.ordinal()]);  // ┴ or equivalent
             }
         }
@@ -185,13 +209,13 @@ public class Table {
      * Print a row of the table
      * @param row the row to print
      */
-    private StringBuilder generateRow(String[] row) {
+    private StringBuilder generateRow(List<String> row) {
         StringBuilder sb = new StringBuilder();
         sb.append(borders[TableRegion.WALL.ordinal()]);  // │ or equivalent
-        for (int i = 0; i < row.length; i++) {
+        for (int i = 0; i < row.size(); i++) {
             sb.append(" ");
-            sb.append(padRight(row[i], columnWidths[i]));
-            sb.append(" ").append(borders[1]);  // │ or equivalent
+            sb.append(padRight(row.get(i), columnWidths.get(i)));
+            sb.append(" ").append(borders[TableRegion.WALL.ordinal()]);  // │ or equivalent
         }
         return sb;
     }

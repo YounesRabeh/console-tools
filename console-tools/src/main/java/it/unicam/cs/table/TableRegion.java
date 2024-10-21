@@ -1,4 +1,4 @@
-package it.unicam.cs.tables;
+package it.unicam.cs.table;
 
 /**
  * The regions of a table

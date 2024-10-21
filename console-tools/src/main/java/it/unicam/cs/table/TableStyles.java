@@ -1,4 +1,4 @@
-package it.unicam.cs.tables;
+package it.unicam.cs.table;
 
 final class TableStyles {
     private static final String[] LIGHT_BORDERS = {"─", "│", "┌", "┬", "┐", "├", "┼", "┤", "└", "┴", "┘"};
